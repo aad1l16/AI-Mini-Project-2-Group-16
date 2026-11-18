@@ -101,7 +101,7 @@ class ReflexAgent(Agent):
         newKeys = successorGameState.getKeys()
         newGrieverPositions = successorGameState.getGrieverPositions()
         
-        score = successorGameState.getScore()
+        score = scoreEvaluationFunction(successorGameState)
         
         if newKeys:
             minKeyDist = min(successorGameState.mazeDistance(newPos, k) for k in newKeys)
@@ -172,8 +172,45 @@ class MinimaxAgent(MultiAgentSearchAgent):
         the depth goes up.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
-
+        numAgents = gameState.getNumAgents()
+        
+        def value(state, agentIndex, depth):
+            if depth == self.depth or state.isWin() or state.isLose():
+                return self.evaluationFunction(state)
+            
+            legalActions = state.getLegalActions(agentIndex)
+            if not legalActions:
+                return self.evaluationFunction(state)
+            
+            nextAgent = (agentIndex + 1) % numAgents
+            nextDepth = depth + 1 if nextAgent == 0 else depth
+            
+            if agentIndex == 0:
+                v = float("-inf")
+                for action in legalActions:
+                    successor = state.generateSuccessor(agentIndex, action)
+                    v = max(v, value(successor, nextAgent, nextDepth))
+                return v
+            else:
+                v = float("inf")
+                for action in legalActions:
+                    successor = state.generateSuccessor(agentIndex, action)
+                    v = min(v, value(successor, nextAgent, nextDepth))
+                return v
+        
+        bestAction = None
+        bestScore = float("-inf")
+        nextAgent = 1 % numAgents
+        nextDepth = 1 if nextAgent == 0 else 0
+        
+        for action in gameState.getLegalActions(0):
+            successor = gameState.generateSuccessor(0, action)
+            score = value(successor, nextAgent, nextDepth)
+            if score > bestScore:
+                bestScore = score
+                bestAction = action
+        
+        return bestAction
 
 # ----------------------------------------------------------------------
 # Q3: Alpha-beta pruning
