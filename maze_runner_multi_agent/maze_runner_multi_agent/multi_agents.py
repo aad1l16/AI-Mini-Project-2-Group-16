@@ -92,12 +92,38 @@ class ReflexAgent(Agent):
         grid distance.
         """
         successorGameState = currentGameState.generateRunnerSuccessor(action)
+        if successorGameState.isWin():
+            return float("inf")
+        if successorGameState.isLose():
+            return float("-inf")
+        
         newPos = successorGameState.getRunnerPosition()
         newKeys = successorGameState.getKeys()
         newGrieverPositions = successorGameState.getGrieverPositions()
+        
+        score = successorGameState.getScore()
+        
+        if newKeys:
+            minKeyDist = min(successorGameState.mazeDistance(newPos, k) for k in newKeys)
+            score += 10.0 / (minKeyDist + 1.0)
+        else:
+            exitDist = successorGameState.mazeDistance(newPos, successorGameState.getExit())
+            score += 20.0 / (exitDist + 1.0)
+            
+        for gPos in newGrieverPositions:
+            gDist = successorGameState.mazeDistance(newPos, gPos)
+            if gDist <= 1:
+                return float("-inf")
+            elif gDist == 2:
+                score -= 15.0
+            else: 
+                score -= 2.0 / gDist
+        
+        if action == STOP:
+            score -= 5.0
 
         "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+        return score
 
 
 def scoreEvaluationFunction(currentGameState):
