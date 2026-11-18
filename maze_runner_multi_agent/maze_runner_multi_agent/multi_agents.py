@@ -230,7 +230,54 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Griever's levels). Remember to update alpha at the root as well.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        numAgents = gameState.getNumAgents()
+        
+        def value(state, agentIndex, depth, alpha, beta):
+            if depth == self.depth or state.isWin() or state.isLose():
+                return self.evaluationFunction(state)
+
+            legalActions = state.getLegalActions(agentIndex)
+            if not legalActions:
+                return self.evaluationFunction(state)
+            
+            nextAgent = (agentIndex + 1) % numAgents
+            nextDepth = depth + 1 if nextAgent == 0 else depth
+            
+            if agentIndex == 0:
+                v = float("-inf")
+                for action in legalActions:
+                    successor = state.generateSuccessor(agentIndex, action)
+                    v = max(v, value(successor, nextAgent, nextDepth, alpha, beta))
+                    if v > beta:
+                        return v
+                    alpha = max(alpha, v)
+                return v
+            else:
+                v = float("inf")
+                for action in legalActions:
+                    successor = state.generateSuccessor(agentIndex, action)
+                    v = min(v, value(successor, nextAgent, nextDepth, alpha, beta))
+                    if v < alpha:
+                        return v
+                    beta = min(beta, v)
+                return v
+        
+        bestAction = None
+        bestScore = float("-inf")
+        alpha = float("-inf")
+        beta = float("inf")
+        nextAgent = 1 % numAgents
+        nextDepth = 1 if nextAgent == 0 else 0
+        
+        for action in gameState.getLegalActions(0):
+            successor = gameState.generateSuccessor(0, action)
+            score = value(successor, nextAgent, nextDepth, alpha, beta)
+            if score > bestScore:
+                bestScore = score
+                bestAction = action
+            alpha = max(alpha, bestScore)
+        
+        return bestAction
 
 
 # ----------------------------------------------------------------------
