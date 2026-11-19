@@ -358,11 +358,65 @@ def betterEvaluationFunction(currentGameState):
     Unlike the Q1 evaluation function, this one scores a STATE, not an
     action. Describe what it does here and in your report:
 
-    DESCRIPTION: <write something here>
+    DESCRIPTION: Winning gives +10000 and losing gives -10000.
+    It guesses the rest of the path by grabbing the key each time
+    then heading to the exit and it takes off 2 points for every unit of distance.
+    Each key still left costs 20 points. If a route runs longer than the time left
+    it costs 500 points. Nearby Grievers cost 300 points when they are 1 or closer
+    60 points at distance 2. 12 Divided by the distance in all other cases.
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    s = currentGameState
+    score = s.getScore()
 
+    if s.isWin():
+        return score + 10000
+
+    if s.isLose():
+        return score - 10000
+
+    pos = s.getRunnerPosition()
+    keys = list(s.getKeys())
+
+    route = 0
+    cur = pos
+    remaining = keys[:]
+
+    while remaining:
+        closest = remaining[0]
+        minDistance = s.mazeDistance(cur, closest)
+
+        for k in remaining:
+            d = s.mazeDistance(cur, k)
+
+            if d < minDistance:
+                minDistance = d
+                closest = k
+
+        nxt = closest
+        route += s.mazeDistance(cur, nxt)
+        cur = nxt
+        remaining.remove(nxt)
+
+    route += s.mazeDistance(cur, s.getExit())
+
+    score -= 2.0 * route
+    score -= 20.0 * len(keys)
+
+    if route > s.getTimeLeft():
+        score -= 500
+
+    for g in s.getGrieverPositions():
+        d = s.mazeDistance(pos, g)
+
+        if d <= 1:
+            score -= 300
+        elif d == 2:
+            score -= 60
+        else:
+            score -= 12.0 / d
+
+    return score
 
 # Abbreviation
 better = betterEvaluationFunction
